@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#231b32">
+  <meta name="referrer" content="no-referrer">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Quote Book">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="style.css">
+  <title>Quote Book</title>
+</head>
+<body>
+  <main class="wrap">
+    <header class="masthead">
+      <div class="brand"><span class="logo">“</span><div><small>THE THINGS WE SAY</small><h1>Quote Book</h1></div></div>
+      <div id="modeBadge" class="badge">This device</div>
+    </header>
+
+    <section id="setup" class="panel setup" hidden>
+      <div class="eyebrow">SET UP YOUR SHARED BOOK</div>
+      <h2>One collection, two phones.</h2>
+      <p>Start a book and send your friend its private invite link, or paste the link they sent you.</p>
+      <div class="setup-actions"><button id="createRoom" class="button primary" type="button">Create our book</button><button id="joinToggle" class="button outline" type="button">Join a book</button></div>
+      <form id="joinForm" hidden><label for="inviteInput">Invite link or code</label><input id="inviteInput" autocomplete="off" placeholder="Paste the link here"><button class="button primary" type="submit">Join book</button></form>
+      <p id="setupMessage" class="message" role="status"></p>
+    </section>
+
+    <section id="sharePanel" class="share-panel" hidden><div class="share-heading"><span>Shared book is ready</span><button id="shareButton" type="button">Share invite link</button></div><label for="inviteLink">Your private invite link</label><input id="inviteLink" readonly aria-label="Private invite link"><button id="copyInvite" type="button">Copy link</button><p id="shareMessage" class="message" role="status"></p></section>
+
+    <section class="panel composer">
+      <div class="section-heading"><div><div class="eyebrow">CAPTURE THE MOMENT</div><h2 id="formTitle">Add a quote</h2></div><button id="cancelEdit" type="button" class="link-button" hidden>Cancel edit</button></div>
+      <form id="quoteForm">
+        <label for="quoteText">The quote</label><textarea id="quoteText" required maxlength="1000" rows="3" placeholder="“I can't believe you actually said that.”"></textarea>
+        <div class="two"><div><label for="speaker">Who said it?</label><input id="speaker" required maxlength="80" placeholder="Name or nickname" autocomplete="on"></div><div><label for="place">Where?</label><input id="place" maxlength="120" placeholder="The kitchen, a bar…"></div></div>
+        <label for="saidAt">Date & time</label><input id="saidAt" type="datetime-local" required>
+        <button id="saveButton" class="button primary wide" type="submit">Save quote</button>
+        <p id="formMessage" class="message" role="status"></p>
+      </form>
+    </section>
+
+    <section class="collection">
+      <div class="list-head"><div><div class="eyebrow">THE ARCHIVE</div><h2>Our quotes <span id="count">0</span></h2></div><button id="randomButton" type="button" class="button outline">Surprise me</button></div>
+      <label class="sr-only" for="search">Search quotes</label><input id="search" class="search" type="search" placeholder="Search quotes, people, or places">
+      <p id="listMessage" class="message" role="status"></p>
+      <div id="quotes" class="quotes"></div>
+      <div id="empty" class="empty">Your future inside jokes go here.</div>
+    </section>
+    <footer><span id="storageNote">Saved on this device. Configure a shared book to sync phones.</span><div class="footer-actions"><button id="exportButton" type="button" class="link-button">Export JSON</button><label for="importFile" class="link-button import-label">Import JSON</label><input id="importFile" type="file" accept=".json,application/json" hidden></div></footer>
+  </main>
+  <dialog id="confirmDialog"><form method="dialog"><h2>Delete this quote?</h2><p>This cannot be undone.</p><div class="dialog-actions"><button class="button outline" value="cancel">Keep it</button><button class="button danger" value="delete">Delete</button></div></form></dialog>
+  <script src="config.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
