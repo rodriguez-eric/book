@@ -10,6 +10,26 @@ let editId = null;
 let focusId = null;
 let actorId = null;
 let busy = false;
+let sessionToken = null;
+
+async function signedInFetch(input, options = {}) {
+  const requestUrl = new URL(typeof input === 'string' ? input : input.url);
+  const projectUrl = new URL(cfg.url);
+  const isDatabaseRequest = requestUrl.origin === projectUrl.origin && requestUrl.pathname.startsWith('/rest/v1/');
+  if (!isDatabaseRequest) return fetch(input, options);
+  if (!sessionToken) throw Error('Sign-in is not ready. Refresh the page and wait for the setup message.');
+  const headers = new Headers(options.headers || (input instanceof Request ? input.headers : undefined));
+  headers.set('Authorization', `Bearer ${sessionToken}`);
+  const response = await fetch(input, { ...options, headers });
+  if (!response.ok) {
+    const error = await response.clone().json().catch(() => null);
+    if (error?.message?.includes('permission denied for function')) {
+      error.message += ' (signed-in request; app v3)';
+      return new Response(JSON.stringify(error), { status: response.status, statusText: response.statusText, headers: response.headers });
+    }
+  }
+  return response;
+}
 
 function localDateTime(date = new Date()) {
   const pad = n => String(n).padStart(2, '0');
@@ -30,6 +50,8 @@ function setBusy(value) {
   busy = value;
   $('saveButton').disabled = value;
   $('createRoom').disabled = value;
+  $('joinToggle').disabled = value;
+  $('joinForm').querySelector('button').disabled = value;
 }
 function normalizeInvite(raw) {
   try { const url = new URL(raw); return url.searchParams.get('invite') || ''; }
@@ -162,11 +184,13 @@ async function joinRoom(event, raw) {
   try { await refresh(); } catch (err) { status('listMessage',`Could not load quotes: ${err.message}`); }
 }
 async function initializeShared() {
+  setBusy(true);
   $('setup').hidden = false;
   $('modeBadge').textContent = 'Connecting';
   try {
     const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-    client = createClient(cfg.url, cfg.publishableKey);
+    client = createClient(cfg.url, cfg.publishableKey, { global: { fetch: signedInFetch } });
+    client.auth.onAuthStateChange((_event, session) => { sessionToken = session?.access_token || null; });
     let { data: { session } } = await client.auth.getSession();
     if (!session) {
       const result = await client.auth.signInAnonymously();
@@ -174,6 +198,7 @@ async function initializeShared() {
       session = result.data.session;
     }
     actorId = session.user.id;
+    sessionToken = session.access_token;
     const inviteFromLink = new URL(location.href).searchParams.get('invite');
     if (inviteFromLink) { await joinRoom(null, inviteFromLink); return; }
     const { data, error } = await client.rpc('get_quote_room');
@@ -182,6 +207,7 @@ async function initializeShared() {
     if (value?.room_id) { setRoom(value); await refresh(); }
     else { setRoom(null); status('setupMessage','Create a book, or join with your friend’s invite link.'); }
   } catch (error) { setRoom(null); status('setupMessage',`Could not connect: ${error.message}. Check config.js and the database setup.`); }
+  finally { setBusy(false); }
 }
 
 $('quoteForm').addEventListener('submit',saveQuote);
